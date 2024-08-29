@@ -60,11 +60,11 @@ To run this script, ensure you have the following installed:
 
 The script provides several customizable parameters:
 
-• **Client ID:** You can provide a custom Spotify Client ID or use the default ( `Use of default Spotify Client ID requires approval, contact hello@busy-tag.com for approval`).
+â€¢ **Client ID:** You can provide a custom Spotify Client ID or use the default ( `Use of default Spotify Client ID requires approval, contact hello@busy-tag.com for approval`).
 
-• **Drive Letter:** Prompted input for the drive letter where the Busy Tag device is located (e.g., `D`).
+â€¢ **Drive Letter:** Prompted input for the drive letter where the Busy Tag device is located (e.g., `D`).
 
-• **Image Processing:** Customize how the album art and text are displayed by adjusting parameters in image_operations.py.
+â€¢ **Image Processing:** Customize how the album art and text are displayed by adjusting parameters in image_operations.py.
 
 
 ## Usage
@@ -139,7 +139,7 @@ A form will appear asking for the app details.
 
 **App Description:** Provide a brief description of your app, e.g., "An app to display current Spotify track information."
 
-**Redirect URI:** Enter http://localhost:8080. This URI is required for the authentication process and should be exactly as shown.
+**Redirect URI:** Enter http://localhost:8080/callback. This URI is required for the authentication process and should be exactly as shown.
 
 **Web API:** Check the box to indicate that your app will use the Web API.
 
