@@ -8,7 +8,7 @@ import base64
 import random
 import string
 
-REDIRECT_URI = 'http://localhost:8080/callback'
+REDIRECT_URI = 'http://127.0.0.1:8080/callback'
 SCOPE = 'user-read-currently-playing user-read-private user-read-email'
 
 def generate_random_string(length):
@@ -49,7 +49,7 @@ def authorize_user(client_id):
     auth_url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
     webbrowser.open(auth_url)
     
-    server_address = ('localhost', 8080)
+    server_address = ('127.0.0.1', 8080)
     httpd = HTTPServer(server_address, AuthHandler)
     
     print("Waiting for user authorization...")

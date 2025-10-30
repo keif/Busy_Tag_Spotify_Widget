@@ -1,13 +1,14 @@
 # Busy Tag Spotify Widget
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Example](#example)
-- [Creating a Spotify Client ID](#creating_a_spotify_client_id)
+- [Busy Tag Spotify Widget](#busy-tag-spotify-widget)
+	- [Table of Contents](#table-of-contents)
+	- [Introduction](#introduction)
+	- [Project Purpose](#project-purpose)
+	- [Prerequisites](#prerequisites)
+	- [Installation](#installation)
+		- [Troubleshooting](#troubleshooting)
+		- [Creating\_a\_Spotify\_Client\_ID](#creating_a_spotify_client_id)
 
 ## Introduction
 
@@ -139,7 +140,7 @@ A form will appear asking for the app details.
 
 **App Description:** Provide a brief description of your app, e.g., "An app to display current Spotify track information."
 
-**Redirect URI:** Enter http://localhost:8080/callback. This URI is required for the authentication process and should be exactly as shown.
+**Redirect URI:** Enter http://127.0.0.1:8080/callback. This URI is required for the authentication process and should be exactly as shown.
 
 **Web API:** Check the box to indicate that your app will use the Web API.
 

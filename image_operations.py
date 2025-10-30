@@ -1,3 +1,5 @@
+import os
+import json
 import requests
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
@@ -21,7 +23,45 @@ def save_image(image, path):
     except Exception as e:
         print(f"Error saving the image: {e}")
 
-def create_image_with_text(track_info, image_path, drive_letter):
+def update_busytag_config(volume_path, image_filename):
+    """Update the BusyTag config.json to point to the new image"""
+    config_path = os.path.join(volume_path, "config.json")
+
+    try:
+        # Read existing config
+        with open(config_path, 'r') as f:
+            content = f.read()
+
+        # Try to parse JSON
+        try:
+            config = json.loads(content)
+        except json.JSONDecodeError as je:
+            print(f"Warning: config.json is malformed. Creating new config.")
+            print(f"JSON Error: {je}")
+            # Create a minimal valid config
+            config = {
+                "version": 3,
+                "image": image_filename,
+                "show_after_drop": True,
+                "allow_usb_msc": True,
+                "allow_file_server": False,
+                "disp_brightness": 100
+            }
+
+        # Update the image field
+        config['image'] = image_filename
+
+        # Write back the config
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        print(f"BusyTag config updated to display: {image_filename}")
+        return True
+    except Exception as e:
+        print(f"Error updating BusyTag config: {e}")
+        return False
+
+def create_image_with_text(track_info, image_path, volume_path):
     canvas_width = 240
     canvas_height = 280
 
@@ -120,5 +160,14 @@ def create_image_with_text(track_info, image_path, drive_letter):
     except IOError:
         print("Error opening the Spotify logo image.")
 
-    output_path = f"{drive_letter}//current_track_image.png"
-    canvas.save(output_path)
+    image_filename = "current_track_image.png"
+    output_path = os.path.join(volume_path, image_filename)
+
+    try:
+        canvas.save(output_path)
+        print(f"Image saved successfully to: {output_path}")
+
+        # Update BusyTag config to display the new image
+        update_busytag_config(volume_path, image_filename)
+    except Exception as e:
+        print(f"Error saving image to {output_path}: {e}")

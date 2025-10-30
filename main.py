@@ -1,20 +1,33 @@
+import os
 import time
+from dotenv import load_dotenv
 from auth import authorize_user, get_access_token
 from spotify_api import get_current_track
-from utils import prompt_for_client_id, check_busy_tag_connection, get_drive_letter
+from utils import prompt_for_client_id, check_busy_tag_connection, get_volume_path
 from image_operations import get_track_image, save_image, create_image_with_text
 
 def main():
+    # Load environment variables from .env file
+    load_dotenv()
+
     default_client_id = "1f2af53deb5d4338b7dc8dd2bc1d2c96"
 
-    client_id = input(f"Please enter your Spotify CLIENT_ID (or press Enter to use the default): ").strip()
-    if not client_id:
-        client_id = default_client_id
-        print(f"Using default CLIENT_ID: {client_id}")
-    else:
-        print(f"Using provided CLIENT_ID: {client_id}")
+    # Try to get CLIENT_ID from .env file first
+    client_id = os.getenv('SPOTIFY_CLIENT_ID')
 
-    drive_letter = get_drive_letter()
+    if client_id:
+        print(f"Using CLIENT_ID from .env file")
+    else:
+        # Prompt user if not in .env
+        client_id = input(f"Please enter your Spotify CLIENT_ID (or press Enter to use the default): ").strip()
+        if not client_id:
+            client_id = default_client_id
+            print(f"Using default CLIENT_ID: {client_id}")
+        else:
+            print(f"Using provided CLIENT_ID: {client_id}")
+
+    volume_path = get_volume_path()
+    print(f"BusyTag volume path set to: {volume_path}")
     auth_code, code_verifier = authorize_user(client_id)
     if auth_code:
         access_token = get_access_token(client_id, auth_code, code_verifier)
@@ -71,7 +84,7 @@ def main():
                     if image:
                         print(f"Track changed.\nNow playing: {new_track_name} by {artist_name}")
                         save_image(image, "track_image.png")
-                        create_image_with_text(track_info, "track_image.png", drive_letter)
+                        create_image_with_text(track_info, "track_image.png", volume_path)
 
                     track_paused_printed = False
                     track_resumed_printed = True
