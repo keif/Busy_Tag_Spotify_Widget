@@ -39,8 +39,13 @@ def get_volume_path():
             else:
                 print("Invalid input. Please enter a single letter (e.g., D).")
     else:  # macOS, Linux, etc.
+        default_path = "/Volumes/NO NAME"
         while True:
-            volume_path = input("Please enter the volume path assigned to Busy Tag (e.g., /Volumes/BUSYTAG): ").strip()
+            volume_path = input(f"Please enter the volume path assigned to Busy Tag (or press Enter for '{default_path}'): ").strip()
+
+            # Use default if user just pressed Enter
+            if not volume_path:
+                volume_path = default_path
 
             if os.path.exists(volume_path):
                 print(f"Ok.")

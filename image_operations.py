@@ -77,11 +77,15 @@ def update_busytag_config(volume_path, image_filename, led_color=None):
             config['activate_pattern'] = False  # Ensure patterns are disabled
             print(f"LED color set to: #{led_color}")
 
-        # Write back the config
+        # Write back the config with proper formatting
         with open(config_path, 'w') as f:
-            json.dump(config, f)
+            json.dump(config, f, indent=4)
+            f.flush()  # Ensure data is written to disk
+            os.fsync(f.fileno())  # Force write to physical storage
 
         print(f"BusyTag config updated to display: {image_filename}")
+        if led_color:
+            print(f"Config written with LED color: #{led_color}")
         return True
     except Exception as e:
         print(f"Error updating BusyTag config: {e}")
