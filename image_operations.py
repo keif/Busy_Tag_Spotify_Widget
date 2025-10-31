@@ -4,6 +4,7 @@ import requests
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from busytag_refresh import refresh_busytag
+from color_extractor import get_album_led_color
 
 def get_track_image(track_info):
     try:
@@ -24,8 +25,15 @@ def save_image(image, path):
     except Exception as e:
         print(f"Error saving the image: {e}")
 
-def update_busytag_config(volume_path, image_filename):
-    """Update the BusyTag config.json to point to the new image"""
+def update_busytag_config(volume_path, image_filename, led_color=None):
+    """
+    Update the BusyTag config.json to point to the new image and set LED color.
+
+    Args:
+        volume_path: Path to the BusyTag volume
+        image_filename: Name of the image file to display
+        led_color: Optional hex color string for LEDs (e.g., "FF0000")
+    """
     config_path = os.path.join(volume_path, "config.json")
 
     try:
@@ -51,6 +59,23 @@ def update_busytag_config(volume_path, image_filename):
 
         # Update the image field
         config['image'] = image_filename
+
+        # Ensure required fields exist with proper structure
+        if 'solid_color' not in config:
+            config['solid_color'] = {"led_bits": 0, "color": "000000"}
+        if 'activate_pattern' not in config:
+            config['activate_pattern'] = False
+        if 'pattern_repeat' not in config:
+            config['pattern_repeat'] = 0
+        if 'custom_pattern_arr' not in config:
+            config['custom_pattern_arr'] = []
+
+        # Update LED color if provided
+        if led_color:
+            config['solid_color']['led_bits'] = 127  # All 7 LEDs
+            config['solid_color']['color'] = led_color
+            config['activate_pattern'] = False  # Ensure patterns are disabled
+            print(f"LED color set to: #{led_color}")
 
         # Write back the config
         with open(config_path, 'w') as f:
@@ -168,8 +193,16 @@ def create_image_with_text(track_info, image_path, volume_path):
         canvas.save(output_path)
         print(f"Image saved successfully to: {output_path}")
 
-        # Update BusyTag config to display the new image
-        update_busytag_config(volume_path, image_filename)
+        # Extract LED color from the album artwork
+        try:
+            led_color = get_album_led_color(image_path, mode='vibrant')
+            print(f"Extracted LED color from album art: #{led_color}")
+        except Exception as e:
+            print(f"Warning: Could not extract LED color: {e}")
+            led_color = None
+
+        # Update BusyTag config to display the new image with LED color
+        update_busytag_config(volume_path, image_filename, led_color=led_color)
 
         # Trigger display refresh by remounting the volume
         volume_name = os.path.basename(volume_path)

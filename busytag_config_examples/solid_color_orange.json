@@ -1,0 +1,15 @@
+{
+    "version": 3,
+    "image": "current_track_image.png",
+    "show_after_drop": true,
+    "allow_usb_msc": true,
+    "allow_file_server": false,
+    "disp_brightness": 100,
+    "solid_color": {
+        "led_bits": 127,
+        "color": "EF932C"
+    },
+    "activate_pattern": false,
+    "pattern_repeat": 0,
+    "custom_pattern_arr": []
+}
