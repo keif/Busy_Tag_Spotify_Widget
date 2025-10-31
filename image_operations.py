@@ -3,6 +3,7 @@ import json
 import requests
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
+from busytag_refresh import refresh_busytag
 
 def get_track_image(track_info):
     try:
@@ -169,5 +170,9 @@ def create_image_with_text(track_info, image_path, volume_path):
 
         # Update BusyTag config to display the new image
         update_busytag_config(volume_path, image_filename)
+
+        # Trigger display refresh by remounting the volume
+        volume_name = os.path.basename(volume_path)
+        refresh_busytag(volume_name=volume_name)
     except Exception as e:
         print(f"Error saving image to {output_path}: {e}")
