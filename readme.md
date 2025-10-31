@@ -12,17 +12,19 @@
 
 ## Introduction
 
-The Busy Tag Spotify Widget is a Python-based application that fetches the currently playing track from Spotify account and displays it on your Busy Tag device. The widget displays the album image, track name, and artist information, updating automatically whenever the track changes.
+The Busy Tag Spotify Widget is a Python-based application that fetches the currently playing track from Spotify account and displays it on your Busy Tag device. The widget displays the album image, track name, and artist information, updating automatically whenever the track changes. Additionally, the widget automatically extracts vibrant colors from album artwork and sets the BusyTag LED colors to match, creating an immersive visual experience.
 
 ## Project Purpose
 
 The main goal of this project is to:
-	
+
 - Integrate with the Spotify API to fetch the current track information.
 
 - Display album art, track name, and artist on a Busy Tag device.
 
-- Automatically update the displayed information when the track changes or when playback is paused or resumed.
+- Automatically extract and apply vibrant LED colors from album artwork to match the displayed track.
+
+- Automatically update the displayed information and LED colors when the track changes or when playback is paused or resumed.
 
 ## Prerequisites
 
@@ -31,6 +33,7 @@ To run this script, ensure you have the following installed:
 - Python 3.6 or higher
 - `Pillow` (PIL Fork) - Python Imaging Library
 - `requests` for API calls
+- `python-dotenv` for environment variable management
 - A Busy Tag device connected to your computer.
 - Spotify Client ID
 - Spotify account
@@ -50,9 +53,9 @@ To run this script, ensure you have the following installed:
 	```
 3. Install the required dependencies:
 	Use `pip` to install the necessary packages.
-	
+
 	```
-	pip install pillow requests
+	pip install pillow requests python-dotenv
 	```
 
 4. Ensure the default font file `MontserratBlack-3zOvZ.ttf` is in the project directory.
@@ -63,9 +66,11 @@ The script provides several customizable parameters:
 
 • **Client ID:** You can provide a custom Spotify Client ID or use the default ( `Use of default Spotify Client ID requires approval, contact hello@busy-tag.com for approval`).
 
-• **Drive Letter:** Prompted input for the drive letter where the Busy Tag device is located (e.g., `D`).
+• **Volume Path:** On macOS/Linux, the default path is `/Volumes/NO NAME`. On Windows, you'll be prompted for the drive letter (e.g., `D`). Press Enter to use the default on macOS.
 
-• **Image Processing:** Customize how the album art and text are displayed by adjusting parameters in image_operations.py.
+• **Image Processing:** Customize how the album art and text are displayed by adjusting parameters in `image_operations.py`.
+
+• **LED Color Extraction:** The widget automatically extracts vibrant colors from album artwork. You can customize the extraction mode in `image_operations.py` (options: `vibrant`, `dominant`, `complementary`, `bright`). See `busytag_config_examples/` for BusyTag config structure reference.
 
 
 ## Usage
@@ -78,26 +83,32 @@ python main.py
    
     The application will prompt you to provide your Spotify Client ID or use the default.
          
-3. **Provide Drive Letter:**
+3. **Provide Volume Path:**
 
-	Enter the drive letter assigned to the Busy Tag device (e.g., D) when prompted.
-	
+	Enter the volume path assigned to the Busy Tag device when prompted. On macOS, press Enter to use the default `/Volumes/NO NAME`, or enter a custom path. On Windows, enter the drive letter (e.g., `D`).
+
 4. **Automatic Operation:**
-	
-	The widget will start fetching the current Spotify track information, updating the Busy Tag device with the album art, track name, and artist details.
+
+	The widget will start fetching the current Spotify track information, updating the Busy Tag device with the album art, track name, artist details, and automatically setting LED colors to match the album artwork.
 	
 ### Example
 
 After running the script, you should see output similar to this in your terminal:
 ```
-Please enter your Spotify Client ID (press Enter to use the default): 
+Please enter your Spotify Client ID (press Enter to use the default):
 Authorization: Ok.
-Please enter the drive letter assigned to Busy Tag device (e.g., D): D
+Please enter the volume path assigned to Busy Tag (or press Enter for '/Volumes/NO NAME'):
+Ok.
 Track changed.
 Now playing: Shape of You by Ed Sheeran
+Image saved successfully to: /Volumes/NO NAME/current_track_image.png
+Extracted LED color from album art: #1FDB62
+LED color set to: #1FDB62
+Config written with LED color: #1FDB62
+BusyTag config updated to display: current_track_image.png
 ```
 
-The Busy Tag device will display the album art, track name, and artist.
+The Busy Tag device will display the album art, track name, artist, and the LEDs will glow with colors extracted from the album artwork.
 Sample:
 
 <img src="/current_track_image_sample.png" alt="Current Track Image" width="300" height="390"/>
