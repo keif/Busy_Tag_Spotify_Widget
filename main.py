@@ -2,7 +2,7 @@ import os
 import time
 from dotenv import load_dotenv
 from auth import authorize_user, get_access_token
-from spotify_api import get_current_track
+from spotify_api import get_current_track, get_audio_features
 from utils import prompt_for_client_id, check_busy_tag_connection, get_volume_path
 from image_operations import get_track_image, save_image, create_image_with_text
 
@@ -79,12 +79,23 @@ def main():
 
                     track_info['item']['name'] = new_track_name
                     artist_name = track_info['item']['artists'][0]['name']
+                    track_id = track_info['item']['id']
 
                     image = get_track_image(track_info)
                     if image:
                         print(f"Track changed.\nNow playing: {new_track_name} by {artist_name}")
                         save_image(image, "track_image.png")
-                        create_image_with_text(track_info, "track_image.png", volume_path)
+
+                        # Fetch audio features to get BPM
+                        bpm = None
+                        audio_features = get_audio_features(access_token, track_id)
+                        if audio_features and 'tempo' in audio_features:
+                            bpm = round(audio_features['tempo'])
+                            print(f"Track BPM: {bpm}")
+                        else:
+                            print("Could not fetch BPM, using solid LED color")
+
+                        create_image_with_text(track_info, "track_image.png", volume_path, bpm=bpm)
 
                     track_paused_printed = False
                     track_resumed_printed = True

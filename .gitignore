@@ -128,3 +128,9 @@ dmypy.json
 .vscode/settings.json
 .vscode/launch.json
 .vscode/tasks.json
+
+# Jetbrains
+.idea
+
+# Generated files
+track_image.png

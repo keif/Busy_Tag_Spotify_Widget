@@ -223,6 +223,63 @@ def get_album_led_color(image_path: str, mode: str = 'vibrant') -> str:
     return rgb_to_hex(rgb)
 
 
+def get_multiple_album_colors(image_path: str, count: int = 3) -> List[str]:
+    """
+    Extract multiple colors from album artwork for LED patterns.
+
+    Args:
+        image_path: Path to the album artwork image
+        count: Number of colors to extract (2-4 recommended)
+
+    Returns:
+        List of hex color strings for BusyTag LED pattern
+    """
+    colors = []
+
+    # Get vibrant color as the primary
+    vibrant_rgb = get_vibrant_color(image_path)
+    colors.append(rgb_to_hex(vibrant_rgb))
+
+    if count >= 2:
+        # Get dominant color
+        dominant_rgb = get_dominant_color(image_path)
+        # Only add if sufficiently different from vibrant
+        if color_distance(vibrant_rgb, dominant_rgb) > 50:
+            colors.append(rgb_to_hex(dominant_rgb))
+        else:
+            # Use complementary to vibrant instead
+            comp_rgb = get_complementary_color(vibrant_rgb)
+            colors.append(rgb_to_hex(comp_rgb))
+
+    if count >= 3:
+        # Add a brightened version of the dominant
+        bright_rgb = adjust_brightness(dominant_rgb, 1.3)
+        colors.append(rgb_to_hex(bright_rgb))
+
+    if count >= 4:
+        # Add complementary to dominant
+        comp_dominant = get_complementary_color(dominant_rgb)
+        colors.append(rgb_to_hex(comp_dominant))
+
+    return colors[:count]
+
+
+def color_distance(rgb1: Tuple[int, int, int], rgb2: Tuple[int, int, int]) -> float:
+    """
+    Calculate perceptual distance between two RGB colors.
+
+    Args:
+        rgb1: First RGB tuple
+        rgb2: Second RGB tuple
+
+    Returns:
+        Distance value (0-441, higher = more different)
+    """
+    return ((rgb1[0] - rgb2[0]) ** 2 +
+            (rgb1[1] - rgb2[1]) ** 2 +
+            (rgb1[2] - rgb2[2]) ** 2) ** 0.5
+
+
 # Testing and examples
 if __name__ == "__main__":
     import sys

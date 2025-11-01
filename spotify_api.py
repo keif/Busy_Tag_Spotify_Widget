@@ -41,3 +41,32 @@ def get_current_track(access_token):
     except requests.exceptions.RequestException as e:
         print(f"Error occurred while trying to get current track: {e}")
         return None, None
+
+def get_audio_features(access_token, track_id):
+    """
+    Get audio features for a track including BPM, energy, danceability, etc.
+
+    Args:
+        access_token: Spotify access token
+        track_id: Spotify track ID
+
+    Returns:
+        dict: Audio features or None if failed
+    """
+    endpoint = f"https://api.spotify.com/v1/audio-features/{track_id}"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    try:
+        response = requests.get(endpoint, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Failed to get audio features: {response.status_code}")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting audio features: {e}")
+        return None

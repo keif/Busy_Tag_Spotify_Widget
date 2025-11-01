@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from busytag_refresh import refresh_busytag
-from color_extractor import get_album_led_color
+from color_extractor import get_album_led_color, get_multiple_album_colors
 
 def get_track_image(track_info):
     try:
@@ -91,7 +91,82 @@ def update_busytag_config(volume_path, image_filename, led_color=None):
         print(f"Error updating BusyTag config: {e}")
         return False
 
-def create_image_with_text(track_info, image_path, volume_path):
+def update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm, speed=100):
+    """
+    Update BusyTag config.json with LED pattern animation based on BPM.
+
+    Args:
+        volume_path: Path to the BusyTag volume
+        image_filename: Name of the image file to display
+        colors: List of hex color strings for the pattern
+        bpm: Beats per minute for timing the pattern
+        speed: LED transition speed (0-255, default 100)
+    """
+    config_path = os.path.join(volume_path, "config.json")
+
+    # Calculate delay based on BPM (milliseconds per beat)
+    delay_ms = int(60000 / bpm) if bpm > 0 else 500
+
+    try:
+        # Read existing config
+        with open(config_path, 'r') as f:
+            content = f.read()
+
+        # Try to parse JSON
+        try:
+            config = json.loads(content)
+        except json.JSONDecodeError as je:
+            print(f"Warning: config.json is malformed. Creating new config.")
+            print(f"JSON Error: {je}")
+            config = {
+                "version": 3,
+                "image": image_filename,
+                "show_after_drop": True,
+                "allow_usb_msc": True,
+                "allow_file_server": False,
+                "disp_brightness": 100
+            }
+
+        # Update the image field
+        config['image'] = image_filename
+
+        # Build pattern array from colors
+        pattern_arr = []
+        for color in colors:
+            pattern_arr.append({
+                "led_bits": 127,  # All 7 LEDs
+                "color": color,
+                "speed": speed,
+                "delay": delay_ms
+            })
+
+        # Configure pattern mode
+        config['activate_pattern'] = True
+        config['pattern_repeat'] = 255  # Loop endlessly
+        config['custom_pattern_arr'] = pattern_arr
+
+        # Disable solid color when using patterns
+        if 'solid_color' not in config:
+            config['solid_color'] = {"led_bits": 0, "color": "000000"}
+        else:
+            config['solid_color']['led_bits'] = 0  # Turn off solid color
+
+        # Write back the config
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
+
+        print(f"BusyTag config updated with LED pattern:")
+        print(f"  - Colors: {', '.join(['#' + c for c in colors])}")
+        print(f"  - BPM: {bpm} ({delay_ms}ms per beat)")
+        return True
+    except Exception as e:
+        print(f"Error updating BusyTag config with pattern: {e}")
+        return False
+
+
+def create_image_with_text(track_info, image_path, volume_path, bpm=None):
     canvas_width = 240
     canvas_height = 280
 
@@ -197,16 +272,29 @@ def create_image_with_text(track_info, image_path, volume_path):
         canvas.save(output_path)
         print(f"Image saved successfully to: {output_path}")
 
-        # Extract LED color from the album artwork
-        try:
-            led_color = get_album_led_color(image_path, mode='vibrant')
-            print(f"Extracted LED color from album art: #{led_color}")
-        except Exception as e:
-            print(f"Warning: Could not extract LED color: {e}")
-            led_color = None
-
-        # Update BusyTag config to display the new image with LED color
-        update_busytag_config(volume_path, image_filename, led_color=led_color)
+        # Choose LED mode based on whether BPM is available
+        if bpm and bpm > 0:
+            # Use pattern mode with multiple colors synchronized to BPM
+            try:
+                colors = get_multiple_album_colors(image_path, count=3)
+                print(f"Extracted {len(colors)} colors for LED pattern")
+                update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm)
+            except Exception as e:
+                print(f"Warning: Could not create LED pattern: {e}")
+                # Fallback to solid color
+                try:
+                    led_color = get_album_led_color(image_path, mode='vibrant')
+                    update_busytag_config(volume_path, image_filename, led_color=led_color)
+                except Exception as e2:
+                    print(f"Warning: LED update failed: {e2}")
+        else:
+            # Use solid color mode (legacy behavior)
+            try:
+                led_color = get_album_led_color(image_path, mode='vibrant')
+                print(f"Extracted LED color from album art: #{led_color}")
+                update_busytag_config(volume_path, image_filename, led_color=led_color)
+            except Exception as e:
+                print(f"Warning: Could not extract LED color: {e}")
 
         # Trigger display refresh by remounting the volume
         volume_name = os.path.basename(volume_path)
