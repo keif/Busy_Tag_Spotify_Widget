@@ -128,3 +128,9 @@ dmypy.json
 .vscode/settings.json
 .vscode/launch.json
 .vscode/tasks.json
+
+# Temporary working files for Spotify widget
+track_image.png
+track_video.mp4
+unedited_gif.gif
+temp_overlay.gif

@@ -34,6 +34,12 @@ To run this script, ensure you have the following installed:
 - `Pillow` (PIL Fork) - Python Imaging Library
 - `requests` for API calls
 - `python-dotenv` for environment variable management
+- `imageio` - Video/GIF processing
+- `numpy` - Array manipulation
+- `pyserial` - Serial communication with BusyTag
+- `protobuf` - Protocol buffers for Spotify APIs
+- `pygifsicle` - GIF optimization
+- `gifsicle` - Command-line tool (install via `brew install gifsicle` on macOS)
 - A Busy Tag device connected to your computer.
 - Spotify Client ID
 - Spotify account
@@ -55,10 +61,15 @@ To run this script, ensure you have the following installed:
 	Use `pip` to install the necessary packages.
 
 	```
-	pip install pillow requests python-dotenv
+	pip install pillow requests python-dotenv imageio numpy pyserial protobuf pygifsicle
 	```
 
-4. Ensure the default font file `MontserratBlack-3zOvZ.ttf` is in the project directory.
+4. Install gifsicle (for GIF processing):
+	- **macOS:** `brew install gifsicle`
+	- **Linux:** `sudo apt-get install gifsicle`
+	- **Windows:** Bundled in `resources/gifsicle/`
+
+5. Ensure the default font file `MontserratBlack-3zOvZ.ttf` is in the project directory.
 
 ## Configuration
 
@@ -112,6 +123,41 @@ The Busy Tag device will display the album art, track name, artist, and the LEDs
 Sample:
 
 <img src="/current_track_image_sample.png" alt="Current Track Image" width="300" height="390"/>
+
+## GIF/Canvas Video Support
+
+This project includes infrastructure for displaying animated GIFs from Spotify Canvas videos:
+
+### Features Implemented
+- ✅ MP4 to GIF conversion with optimization
+- ✅ Background threading for video processing
+- ✅ GIF overlay with track information
+- ✅ Serial communication with BusyTag for display control
+- ✅ Cross-platform gifsicle support (macOS, Linux, Windows)
+
+### Known Limitation - Canvas API Access
+
+**Currently, Spotify Canvas videos cannot be automatically downloaded** due to restrictions on Spotify's internal Canvas API (`spclient.wg.spotify.com/canvaz-cache`). This API:
+- Is not part of the official Spotify Web API
+- Requires special authentication tokens not available through standard OAuth
+- Has been increasingly restricted by Spotify
+
+The GIF processing infrastructure is fully functional and tested, but the automatic canvas video download feature will show:
+```
+Checking for canvas video for: [Track Name]
+No canvas video available for this track.
+```
+
+### Testing GIF Features
+
+You can test the GIF processing features manually:
+1. Run the test script: `python3 test_gif_integration.py`
+2. Place a test MP4 file named `track_video.mp4` in the project directory
+3. The processing pipeline will convert and display it
+
+### Future Work
+
+If Spotify provides official Canvas API access or authentication methods in the future, the existing infrastructure is ready to support automatic canvas video downloads and display.
 
 ### Troubleshooting
 

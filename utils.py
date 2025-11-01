@@ -56,3 +56,33 @@ def get_volume_path():
 # Keep the old function for backwards compatibility
 def get_drive_letter():
     return get_volume_path()
+
+def transfer_file(source_path, destination_folder, new_name):
+    import shutil
+    try:
+        if not os.path.exists(source_path):
+            print(f"Error: Source file not found at {source_path}")
+            return None
+        if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder)
+        destination_path = os.path.join(destination_folder, new_name)
+        shutil.move(source_path, destination_path)
+
+        return destination_path
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def delete_file(file_path):
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"An error occurred while deleting the file: {e}")
+
+        return False
