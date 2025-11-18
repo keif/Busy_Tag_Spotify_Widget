@@ -90,6 +90,24 @@ def mount_disk(disk_identifier: str) -> bool:
     try:
         logger.debug(f"Remounting disk '{disk_identifier}'...")
 
+        # First, unmount the disk to trigger "show_after_drop"
+        # Use force to bypass processes holding the volume
+        unmount_result = subprocess.run(
+            ['diskutil', 'unmount', 'force', f"/dev/{disk_identifier}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if unmount_result.returncode != 0:
+            # If unmount fails because it's not mounted, that's okay
+            if "not currently mounted" not in unmount_result.stderr.lower():
+                logger.warning(f"Unmount warning: {unmount_result.stderr}")
+
+        # Wait briefly for the unmount to complete
+        time.sleep(0.5)
+
+        # Now mount it back
         result = subprocess.run(
             ['diskutil', 'mount', f"/dev/{disk_identifier}"],
             capture_output=True,

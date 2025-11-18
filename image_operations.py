@@ -51,7 +51,7 @@ def update_busytag_config(volume_path, image_filename, led_color=None):
             config = {
                 "version": 3,
                 "image": image_filename,
-                "show_after_drop": True,
+                "show_after_drop": False,
                 "allow_usb_msc": True,
                 "allow_file_server": False,
                 "disp_brightness": 100
@@ -59,6 +59,9 @@ def update_busytag_config(volume_path, image_filename, led_color=None):
 
         # Update the image field
         config['image'] = image_filename
+
+        # Set show_after_drop to false - we trigger refresh via unmount/remount
+        config['show_after_drop'] = False
 
         # Ensure required fields exist with proper structure
         if 'solid_color' not in config:
@@ -121,7 +124,7 @@ def update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm,
             config = {
                 "version": 3,
                 "image": image_filename,
-                "show_after_drop": True,
+                "show_after_drop": False,
                 "allow_usb_msc": True,
                 "allow_file_server": False,
                 "disp_brightness": 100
@@ -129,6 +132,9 @@ def update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm,
 
         # Update the image field
         config['image'] = image_filename
+
+        # Set show_after_drop to false - we trigger refresh via unmount/remount
+        config['show_after_drop'] = False
 
         # Build pattern array from colors
         pattern_arr = []
