@@ -93,7 +93,7 @@ def mount_disk(disk_identifier: str) -> bool:
         # First, unmount the disk to trigger "show_after_drop"
         # Use force to bypass processes holding the volume
         unmount_result = subprocess.run(
-            ['diskutil', 'unmount', 'force', f"/dev/{disk_identifier}"],
+            ['diskutil', 'unmountDisk', 'force', disk_identifier],
             capture_output=True,
             text=True,
             timeout=10
@@ -105,14 +105,14 @@ def mount_disk(disk_identifier: str) -> bool:
                 logger.warning(f"Unmount warning: {unmount_result.stderr}")
 
         # Wait briefly for the unmount to complete
-        time.sleep(0.5)
+        time.sleep(1)
 
         # Now mount it back
         result = subprocess.run(
-            ['diskutil', 'mount', f"/dev/{disk_identifier}"],
+            ['diskutil', 'mountDisk', disk_identifier],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=15
         )
 
         if result.returncode == 0:
@@ -161,7 +161,7 @@ def verify_mount(volume_name: str, timeout: int = 3) -> bool:
     return False
 
 
-def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 0.5) -> bool:
+def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 2.0) -> bool:
     """
     Refresh BusyTag e-ink display by remounting its volume.
 
@@ -172,7 +172,7 @@ def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 0.5) -> b
 
     Args:
         volume_name: Name of the BusyTag volume (default: "NO NAME")
-        mount_delay: Seconds to wait after remounting (default: 0.5)
+        mount_delay: Seconds to wait after remounting (default: 2.0)
 
     Returns:
         True if refresh was successful, False otherwise
@@ -193,9 +193,15 @@ def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 0.5) -> b
         return False
 
     # Step 2: Remount the disk
-    if not mount_disk(disk_id):
-        logger.error("✗ Refresh failed: Could not remount disk")
-        return False
+    mount_success = mount_disk(disk_id)
+
+    if not mount_success:
+        logger.warning("Remount failed, attempting recovery mount...")
+        # Try to just mount it (may already be mounted or need simple mount)
+        try:
+            subprocess.run(['diskutil', 'mountDisk', disk_id], timeout=15, check=False)
+        except Exception as e:
+            logger.error(f"Recovery mount failed: {e}")
 
     # Wait to ensure mount completes
     if mount_delay > 0:
@@ -203,9 +209,19 @@ def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 0.5) -> b
         time.sleep(mount_delay)
 
     # Step 3: Verify the volume is still accessible
-    if not verify_mount(volume_name):
-        logger.warning("Volume not accessible after remount (may still work)")
-        # Don't return False here - the remount may have worked anyway
+    if not verify_mount(volume_name, timeout=5):
+        logger.error("✗ Volume not accessible after remount")
+        # Try one more emergency mount
+        try:
+            logger.info("Attempting emergency mount...")
+            subprocess.run(['diskutil', 'mountDisk', disk_id], timeout=15, check=False)
+            time.sleep(2)
+            if verify_mount(volume_name, timeout=3):
+                logger.info("✓ Emergency mount succeeded")
+                return True
+        except Exception as e:
+            logger.error(f"Emergency mount failed: {e}")
+        return False
 
     logger.info("✓ BusyTag refresh completed")
     return True
