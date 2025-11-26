@@ -4,7 +4,41 @@ from dotenv import load_dotenv
 from auth import authorize_user, get_access_token
 from spotify_api import get_current_track, get_audio_features
 from utils import prompt_for_client_id, check_busy_tag_connection, get_volume_path
-from image_operations import get_track_image, save_image, create_image_with_text
+from image_operations import get_track_image, save_image, create_image_with_text, create_connection_lost_image
+
+MAX_AUTH_RETRIES = 3
+
+
+def attempt_authorization(client_id, volume_path, attempt=1, max_retries=MAX_AUTH_RETRIES):
+    """
+    Attempt Spotify authorization with retry logic.
+
+    Returns:
+        access_token if successful, None if all retries exhausted
+    """
+    print(f"\nAuthorization attempt {attempt}/{max_retries}")
+
+    auth_code, code_verifier = authorize_user(client_id)
+    if auth_code:
+        access_token = get_access_token(client_id, auth_code, code_verifier)
+        if access_token:
+            return access_token
+
+    # Authorization failed
+    if attempt >= max_retries:
+        print(f"\nFailed to authorize after {max_retries} attempts. Shutting down...")
+        create_connection_lost_image(volume_path)
+        return None
+
+    # Show connection lost and retry
+    print(f"Authorization failed. Showing connection lost screen...")
+    create_connection_lost_image(volume_path)
+
+    print(f"Retrying in 10 seconds... ({max_retries - attempt} attempts remaining)")
+    time.sleep(10)
+
+    return attempt_authorization(client_id, volume_path, attempt + 1, max_retries)
+
 
 def main():
     # Load environment variables from .env file
@@ -28,11 +62,10 @@ def main():
 
     volume_path = get_volume_path()
     print(f"BusyTag volume path set to: {volume_path}")
-    auth_code, code_verifier = authorize_user(client_id)
-    if auth_code:
-        access_token = get_access_token(client_id, auth_code, code_verifier)
-    else:
-        print("Failed to authorize. Exiting...")
+
+    # Initial authorization with retry logic
+    access_token = attempt_authorization(client_id, volume_path)
+    if not access_token:
         return
 
     current_track_name = None
@@ -44,15 +77,11 @@ def main():
             track_info, status_code = get_current_track(access_token)
 
             if status_code == 401:
-                auth_code, code_verifier = authorize_user(client_id)
-                if auth_code:
-                    access_token = get_access_token(client_id, auth_code, code_verifier)
-                    if not access_token:
-                        print("Failed to reauthorize. Exiting...")
-                        break
-                else:
-                    print("Failed to reauthorize. Exiting...")
+                print("\nAccess token expired. Re-authorizing...")
+                access_token = attempt_authorization(client_id, volume_path)
+                if not access_token:
                     break
+                continue
 
             if track_info and 'item' in track_info:
                 is_playing = track_info.get('is_playing', False)

@@ -6,6 +6,116 @@ from PIL import Image, ImageDraw, ImageFont
 from busytag_refresh import refresh_busytag
 from color_extractor import get_album_led_color, get_multiple_album_colors
 
+def create_connection_lost_image(volume_path):
+    """
+    Create and display a 'Connection Lost...' image on the BusyTag with pulsing red LEDs.
+
+    Args:
+        volume_path: Path to the BusyTag volume
+    """
+    canvas_width = 240
+    canvas_height = 280
+
+    # Create black background
+    canvas = Image.new('RGB', (canvas_width, canvas_height), (0, 0, 0))
+    draw = ImageDraw.Draw(canvas)
+
+    font_path = "MontserratBlack-3zOvZ.ttf"
+
+    # Draw "CONNECTION" and "LOST..." text
+    try:
+        title_font = ImageFont.truetype(font_path, 28)
+        subtitle_font = ImageFont.truetype(font_path, 24)
+    except IOError:
+        title_font = ImageFont.load_default()
+        subtitle_font = ImageFont.load_default()
+
+    # Calculate text positions for centering
+    connection_text = "CONNECTION"
+    lost_text = "LOST..."
+
+    # Get text bounding boxes for centering
+    conn_bbox = draw.textbbox((0, 0), connection_text, font=title_font)
+    lost_bbox = draw.textbbox((0, 0), lost_text, font=subtitle_font)
+
+    conn_width = conn_bbox[2] - conn_bbox[0]
+    lost_width = lost_bbox[2] - lost_bbox[0]
+
+    # Center horizontally, position vertically in middle of screen
+    conn_x = (canvas_width - conn_width) // 2
+    lost_x = (canvas_width - lost_width) // 2
+
+    conn_y = 110
+    lost_y = 150
+
+    # Draw text with slight red tint for techy look
+    draw.text((conn_x, conn_y), connection_text, font=title_font, fill=(255, 50, 50))
+    draw.text((lost_x, lost_y), lost_text, font=subtitle_font, fill=(180, 180, 180))
+
+    # Add some decorative elements for techy feel
+    # Top and bottom red lines
+    draw.rectangle([(20, 80), (220, 82)], fill=(255, 0, 0))
+    draw.rectangle([(20, 198), (220, 200)], fill=(255, 0, 0))
+
+    # Small blinking dots pattern
+    for i in range(5):
+        x = 60 + i * 30
+        draw.ellipse([(x, 210), (x + 6, 216)], fill=(255, 0, 0) if i % 2 == 0 else (80, 0, 0))
+
+    image_filename = "connection_lost.png"
+    output_path = os.path.join(volume_path, image_filename)
+
+    try:
+        canvas.save(output_path)
+        print(f"Connection lost image saved to: {output_path}")
+
+        # Configure pulsing red LED pattern
+        config_path = os.path.join(volume_path, "config.json")
+
+        try:
+            with open(config_path, 'r') as f:
+                config = json.loads(f.read())
+        except (IOError, json.JSONDecodeError):
+            config = {
+                "version": 3,
+                "show_after_drop": False,
+                "allow_usb_msc": True,
+                "allow_file_server": False,
+                "disp_brightness": 100
+            }
+
+        config['image'] = image_filename
+        config['show_after_drop'] = False
+
+        # Pulsing red LED pattern (dark red -> bright red -> dark red)
+        config['activate_pattern'] = True
+        config['pattern_repeat'] = 255  # Loop endlessly
+        config['custom_pattern_arr'] = [
+            {"led_bits": 127, "color": "330000", "speed": 50, "delay": 400},
+            {"led_bits": 127, "color": "FF0000", "speed": 50, "delay": 400},
+            {"led_bits": 127, "color": "330000", "speed": 50, "delay": 400},
+        ]
+
+        # Disable solid color
+        config['solid_color'] = {"led_bits": 0, "color": "000000"}
+
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
+
+        print("BusyTag configured with pulsing red LED pattern")
+
+        # Trigger display refresh
+        volume_name = os.path.basename(volume_path)
+        refresh_busytag(volume_name=volume_name)
+
+        return True
+    except Exception as e:
+        print(f"Error creating connection lost display: {e}")
+        return False
+
+
 def get_track_image(track_info):
     try:
         image_url = track_info['item']['album']['images'][0]['url']
