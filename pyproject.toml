@@ -1,0 +1,35 @@
+[project]
+name = "busytag-spotify-widget"
+version = "1.0.0"
+description = "Displays the currently playing Spotify track on a BusyTag device, with LED colors extracted from album art and BPM-synced patterns."
+readme = "readme.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.32.0",
+    "Pillow>=11.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+# Tooling only needed for local development and macOS app packaging.
+dev = [
+    "py2app>=0.28.8",
+    "ruff>=0.9.0",
+]
+
+[tool.uv]
+# Modules live at the repo root rather than a src/ package layout.
+package = false
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+# Conservative default set; the codebase predates linting, so keep the
+# initial gate lightweight and expand as the code is cleaned up.
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501", # line length is handled by the formatter, not enforced hard
+]

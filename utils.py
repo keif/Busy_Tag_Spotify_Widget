@@ -1,6 +1,7 @@
 import os
 import platform
 
+
 def prompt_for_client_id():
     client_id = input("Please enter your Spotify CLIENT_ID: ")
     return client_id
@@ -32,7 +33,7 @@ def get_volume_path():
                 drive_letter = f"{drive_letter}:"
 
                 if os.path.exists(f"{drive_letter}\\"):
-                    print(f"Ok.")
+                    print("Ok.")
                     return drive_letter
                 else:
                     print(f"Drive {drive_letter} does not exist. Please enter a valid drive letter.")
@@ -48,7 +49,7 @@ def get_volume_path():
                 volume_path = default_path
 
             if os.path.exists(volume_path):
-                print(f"Ok.")
+                print("Ok.")
                 return volume_path
             else:
                 print(f"Volume {volume_path} does not exist. Please enter a valid path.")

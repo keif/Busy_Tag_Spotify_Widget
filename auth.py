@@ -1,12 +1,13 @@
-import webbrowser
-import requests
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
-from urllib.parse import urlencode, urlparse, parse_qs
-import hashlib
 import base64
+import hashlib
 import random
 import string
+import threading
+import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlencode, urlparse
+
+import requests
 
 REDIRECT_URI = 'http://127.0.0.1:8080/callback'
 SCOPE = 'user-read-currently-playing user-read-private user-read-email'
@@ -81,10 +82,10 @@ def authorize_user(client_id):
     }
     
     auth_url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
-    print(f"\nOpening browser for Spotify authorization...")
-    print(f"If authorization fails, ensure this redirect URI is added to your Spotify App:")
+    print("\nOpening browser for Spotify authorization...")
+    print("If authorization fails, ensure this redirect URI is added to your Spotify App:")
     print(f"  → {REDIRECT_URI}")
-    print(f"  → Add it at: https://developer.spotify.com/dashboard\n")
+    print("  → Add it at: https://developer.spotify.com/dashboard\n")
 
     webbrowser.open(auth_url)
 
@@ -116,7 +117,7 @@ def authorize_user(client_id):
         return None, None
 
     if hasattr(httpd, 'auth_code') and httpd.auth_code:
-        print(f"Authorization: Ok.")
+        print("Authorization: Ok.")
         return httpd.auth_code, code_verifier
     else:
         print("Authorization failed.")

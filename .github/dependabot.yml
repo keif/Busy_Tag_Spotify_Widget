@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # Python dependencies, resolved from pyproject.toml + uv.lock.
+  # Dependabot's "pip" ecosystem natively understands uv lockfiles.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # Collapse routine minor/patch bumps into a single PR to cut noise;
+      # major bumps still come through individually so they get real review.
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  # Keep the GitHub Actions used in CI up to date and pinned.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "github-actions"

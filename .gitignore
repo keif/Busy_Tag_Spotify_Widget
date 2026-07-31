@@ -79,7 +79,8 @@ profile_default/
 ipython_config.py
 
 # pyenv
-.python-version
+# .python-version is committed intentionally: it pins the interpreter for uv
+# (used by `uv python install` locally and in CI). Do not ignore it.
 
 # celery beat schedule file
 celerybeat-schedule

@@ -6,13 +6,13 @@ Analyzes album artwork to extract dominant and complementary colors
 for BusyTag LED configuration.
 """
 
-from PIL import Image
 import colorsys
 from collections import Counter
-from typing import Tuple, List
+
+from PIL import Image
 
 
-def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
+def rgb_to_hex(rgb: tuple[int, int, int]) -> str:
     """
     Convert RGB tuple to hex string format for BusyTag.
 
@@ -22,10 +22,10 @@ def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
     Returns:
         Hex string like "FF0000" (no # prefix)
     """
-    return '{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2])
+    return f'{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}'
 
 
-def get_complementary_color(rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
+def get_complementary_color(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
     """
     Calculate the complementary color for a given RGB value.
 
@@ -52,7 +52,7 @@ def get_complementary_color(rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
     )
 
 
-def get_analogous_colors(rgb: Tuple[int, int, int], offset: float = 0.083) -> List[Tuple[int, int, int]]:
+def get_analogous_colors(rgb: tuple[int, int, int], offset: float = 0.083) -> list[tuple[int, int, int]]:
     """
     Get analogous colors (±30 degrees on color wheel).
 
@@ -79,7 +79,7 @@ def get_analogous_colors(rgb: Tuple[int, int, int], offset: float = 0.083) -> Li
     return colors
 
 
-def get_dominant_color(image_path: str, num_colors: int = 5, skip_edge_pixels: int = 5) -> Tuple[int, int, int]:
+def get_dominant_color(image_path: str, num_colors: int = 5, skip_edge_pixels: int = 5) -> tuple[int, int, int]:
     """
     Extract the dominant color from an image.
 
@@ -130,7 +130,7 @@ def get_dominant_color(image_path: str, num_colors: int = 5, skip_edge_pixels: i
     return most_common[0][0]
 
 
-def get_vibrant_color(image_path: str) -> Tuple[int, int, int]:
+def get_vibrant_color(image_path: str) -> tuple[int, int, int]:
     """
     Extract a vibrant (saturated) color from the image.
 
@@ -165,7 +165,7 @@ def get_vibrant_color(image_path: str) -> Tuple[int, int, int]:
     return pixel_counts.most_common(1)[0][0]
 
 
-def adjust_brightness(rgb: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
+def adjust_brightness(rgb: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
     """
     Adjust the brightness of an RGB color.
 
@@ -223,7 +223,7 @@ def get_album_led_color(image_path: str, mode: str = 'vibrant') -> str:
     return rgb_to_hex(rgb)
 
 
-def get_multiple_album_colors(image_path: str, count: int = 3) -> List[str]:
+def get_multiple_album_colors(image_path: str, count: int = 3) -> list[str]:
     """
     Extract multiple colors from album artwork for LED patterns.
 
@@ -264,7 +264,7 @@ def get_multiple_album_colors(image_path: str, count: int = 3) -> List[str]:
     return colors[:count]
 
 
-def color_distance(rgb1: Tuple[int, int, int], rgb2: Tuple[int, int, int]) -> float:
+def color_distance(rgb1: tuple[int, int, int], rgb2: tuple[int, int, int]) -> float:
     """
     Calculate perceptual distance between two RGB colors.
 
@@ -313,7 +313,7 @@ if __name__ == "__main__":
         comp_hex = rgb_to_hex(comp_rgb)
         print(f"Complementary Color: {comp_hex} (RGB: {comp_rgb})")
 
-        print(f"\nBusyTag config.json LED setting:")
+        print("\nBusyTag config.json LED setting:")
         print(f'{{"led_bits": 127, "color": "{hex_color}"}}')
 
     except Exception as e:
