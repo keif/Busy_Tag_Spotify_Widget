@@ -7,14 +7,21 @@ Build with:
 For development/testing:
     python setup.py py2app -A
 """
+import os
+
 from setuptools import setup
 
 APP = ['main.py']
 DATA_FILES = [
     'MontserratBlack-3zOvZ.ttf',
     'spotify_logo.png',
-    '.env',
 ]
+
+# Bundle the developer's local .env if it exists. It is gitignored, so a clean
+# checkout or CI/release build simply skips it instead of failing on a missing
+# file; the app prompts for the Spotify client ID at runtime when it is absent.
+if os.path.exists('.env'):
+    DATA_FILES.append('.env')
 
 OPTIONS = {
     'argv_emulation': False,
