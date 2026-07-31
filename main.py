@@ -1,10 +1,17 @@
 import os
 import time
+
 from dotenv import load_dotenv
+
 from auth import authorize_user, get_access_token
-from spotify_api import get_current_track, get_audio_features
-from utils import prompt_for_client_id, check_busy_tag_connection, get_volume_path
-from image_operations import get_track_image, save_image, create_image_with_text, create_connection_lost_image
+from image_operations import (
+    create_connection_lost_image,
+    create_image_with_text,
+    get_track_image,
+    save_image,
+)
+from spotify_api import get_audio_features, get_current_track
+from utils import get_volume_path
 
 MAX_AUTH_RETRIES = 3
 
@@ -31,7 +38,7 @@ def attempt_authorization(client_id, volume_path, attempt=1, max_retries=MAX_AUT
         return None
 
     # Show connection lost and retry
-    print(f"Authorization failed. Showing connection lost screen...")
+    print("Authorization failed. Showing connection lost screen...")
     create_connection_lost_image(volume_path)
 
     print(f"Retrying in 10 seconds... ({max_retries - attempt} attempts remaining)")
@@ -50,10 +57,10 @@ def main():
     client_id = os.getenv('SPOTIFY_CLIENT_ID')
 
     if client_id:
-        print(f"Using CLIENT_ID from .env file")
+        print("Using CLIENT_ID from .env file")
     else:
         # Prompt user if not in .env
-        client_id = input(f"Please enter your Spotify CLIENT_ID (or press Enter to use the default): ").strip()
+        client_id = input("Please enter your Spotify CLIENT_ID (or press Enter to use the default): ").strip()
         if not client_id:
             client_id = default_client_id
             print(f"Using default CLIENT_ID: {client_id}")

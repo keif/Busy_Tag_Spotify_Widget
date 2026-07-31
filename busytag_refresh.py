@@ -13,11 +13,10 @@ Usage:
     refresh_busytag(volume_name="NO NAME")
 """
 
-import subprocess
-import time
 import logging
 import re
-from typing import Optional
+import subprocess
+import time
 
 # Configure logging
 logging.basicConfig(
@@ -27,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_disk_identifier(volume_name: str) -> Optional[str]:
+def get_disk_identifier(volume_name: str) -> str | None:
     """
     Find the disk identifier (e.g., 'disk4') for a given volume name.
 
@@ -227,7 +226,7 @@ def refresh_busytag(volume_name: str = "NO NAME", mount_delay: float = 2.0) -> b
     return True
 
 
-def get_volume_path(volume_name: str = "NO NAME") -> Optional[str]:
+def get_volume_path(volume_name: str = "NO NAME") -> str | None:
     """
     Get the full path to a volume if it exists and is mounted.
 

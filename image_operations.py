@@ -1,10 +1,13 @@
-import os
 import json
-import requests
+import os
 from io import BytesIO
+
+import requests
 from PIL import Image, ImageDraw, ImageFont
+
 from busytag_refresh import refresh_busytag
 from color_extractor import get_album_led_color, get_multiple_album_colors
+
 
 def create_connection_lost_image(volume_path):
     """
@@ -26,7 +29,7 @@ def create_connection_lost_image(volume_path):
     try:
         title_font = ImageFont.truetype(font_path, 28)
         subtitle_font = ImageFont.truetype(font_path, 24)
-    except IOError:
+    except OSError:
         title_font = ImageFont.load_default()
         subtitle_font = ImageFont.load_default()
 
@@ -73,9 +76,9 @@ def create_connection_lost_image(volume_path):
         config_path = os.path.join(volume_path, "config.json")
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = json.loads(f.read())
-        except (IOError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError):
             config = {
                 "version": 3,
                 "show_after_drop": False,
@@ -148,14 +151,14 @@ def update_busytag_config(volume_path, image_filename, led_color=None):
 
     try:
         # Read existing config
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             content = f.read()
 
         # Try to parse JSON
         try:
             config = json.loads(content)
         except json.JSONDecodeError as je:
-            print(f"Warning: config.json is malformed. Creating new config.")
+            print("Warning: config.json is malformed. Creating new config.")
             print(f"JSON Error: {je}")
             # Create a minimal valid config
             config = {
@@ -222,14 +225,14 @@ def update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm,
 
     try:
         # Read existing config
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             content = f.read()
 
         # Try to parse JSON
         try:
             config = json.loads(content)
         except json.JSONDecodeError as je:
-            print(f"Warning: config.json is malformed. Creating new config.")
+            print("Warning: config.json is malformed. Creating new config.")
             print(f"JSON Error: {je}")
             config = {
                 "version": 3,
@@ -273,7 +276,7 @@ def update_busytag_config_with_pattern(volume_path, image_filename, colors, bpm,
             f.flush()
             os.fsync(f.fileno())
 
-        print(f"BusyTag config updated with LED pattern:")
+        print("BusyTag config updated with LED pattern:")
         print(f"  - Colors: {', '.join(['#' + c for c in colors])}")
         print(f"  - BPM: {bpm} ({delay_ms}ms per beat)")
         return True
@@ -290,7 +293,7 @@ def create_image_with_text(track_info, image_path, volume_path, bpm=None):
 
     try:
         track_image = Image.open(image_path)
-    except IOError:
+    except OSError:
         print(f"Error opening the image at {image_path}")
         return
 
@@ -378,7 +381,7 @@ def create_image_with_text(track_info, image_path, volume_path, bpm=None):
         logo_y = canvas_height - 49
 
         canvas.paste(spotify_logo, (logo_x, logo_y), spotify_logo)
-    except IOError:
+    except OSError:
         print("Error opening the Spotify logo image.")
 
     image_filename = "current_track_image.png"

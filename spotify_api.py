@@ -1,5 +1,7 @@
 import time
+
 import requests
+
 
 def get_current_track(access_token):
     endpoint = "https://api.spotify.com/v1/me/player/currently-playing"
@@ -31,8 +33,6 @@ def get_current_track(access_token):
                 print("No track information available.")
                 return None, response.status_code
 
-            track_name = track_info['item']['name']
-            artist_name = track_info['item']['artists'][0]['name']
             return track_info, response.status_code
 
         print(f"Unexpected status code: {response.status_code}")

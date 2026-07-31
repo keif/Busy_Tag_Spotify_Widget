@@ -30,13 +30,14 @@ The main goal of this project is to:
 
 To run this script, ensure you have the following installed:
 
-- Python 3.6 or higher
-- `Pillow` (PIL Fork) - Python Imaging Library
-- `requests` for API calls
-- `python-dotenv` for environment variable management
+- Python 3.11 or higher
+- [`uv`](https://docs.astral.sh/uv/) for dependency and environment management
 - A Busy Tag device connected to your computer.
 - Spotify Client ID
 - Spotify account
+
+Runtime dependencies (`Pillow`, `requests`, `python-dotenv`) are declared in
+`pyproject.toml` and pinned in `uv.lock` — `uv` installs them for you.
 
 ## Installation
  
@@ -51,14 +52,25 @@ To run this script, ensure you have the following installed:
 	```
 	cd Busy_Tag_Spotify_Widget.git
 	```
-3. Install the required dependencies:
-	Use `pip` to install the necessary packages.
+3. Install the dependencies:
+	`uv` reads `pyproject.toml`/`uv.lock`, provisions the correct Python
+	version (from `.python-version`), and creates the virtual environment.
 
 	```
-	pip install pillow requests python-dotenv
+	uv sync
 	```
 
 4. Ensure the default font file `MontserratBlack-3zOvZ.ttf` is in the project directory.
+
+5. Run the widget:
+
+	```
+	uv run python main.py
+	```
+
+> Not using `uv`? A generated `requirements.txt` is provided for pip users:
+> `pip install -r requirements.txt`. Note it is auto-generated from `uv.lock` —
+> edit dependencies in `pyproject.toml`, not `requirements.txt`.
 
 ## Configuration
 
