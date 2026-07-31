@@ -109,7 +109,7 @@ def get_dominant_color(image_path: str, num_colors: int = 5, skip_edge_pixels: i
         ))
 
     # Get all pixels
-    pixels = list(img.getdata())
+    pixels = list(img.get_flattened_data())
 
     # Filter out very dark and very bright pixels (likely background)
     filtered_pixels = [
@@ -144,7 +144,7 @@ def get_vibrant_color(image_path: str) -> tuple[int, int, int]:
     img = img.convert('RGB')
     img = img.resize((150, 150), Image.Resampling.LANCZOS)
 
-    pixels = list(img.getdata())
+    pixels = list(img.get_flattened_data())
 
     # Filter for vibrant colors (high saturation, moderate value)
     vibrant_pixels = []

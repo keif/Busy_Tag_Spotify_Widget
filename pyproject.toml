@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
     "requests>=2.32.0",
-    "Pillow>=11.0.0",
+    "Pillow>=11.3.0",
     "python-dotenv>=1.0.0",
 ]
 
@@ -16,11 +16,17 @@ dependencies = [
 dev = [
     "py2app>=0.28.8",
     "ruff>=0.9.0",
+    "pytest>=8.0.0",
 ]
 
 [tool.uv]
 # Modules live at the repo root rather than a src/ package layout.
 package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Modules live at the repo root (flat layout), so put it on sys.path for imports.
+pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py311"
