@@ -182,3 +182,26 @@ In the `"Basic Information"` tab under Settings, you will find your `Client ID`.
 Copy the Client ID as you'll need it to run the Busy_Tag_Spotify_Widget.
 
 Your Spotify Client ID is now ready to be used with the Busy_Tag_Spotify_Widget. 
+
+## Releasing
+
+Versioning follows [Semantic Versioning](https://semver.org/); the version lives
+in `pyproject.toml` and the py2app bundle reads it from there, so there is a single
+source of truth.
+
+`CHANGELOG.md` is generated from the Conventional Commit history with
+[git-cliff](https://git-cliff.org/):
+
+```
+uv run git-cliff -o CHANGELOG.md   # regenerate the full changelog
+uv run git-cliff --latest          # preview notes for the pending release
+```
+
+To cut a release:
+
+1. Bump `version` in `pyproject.toml`.
+2. Regenerate and commit `CHANGELOG.md`.
+3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which builds the
+release notes and publishes a GitHub Release automatically.
