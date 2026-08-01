@@ -197,11 +197,15 @@ uv run git-cliff -o CHANGELOG.md   # regenerate the full changelog
 uv run git-cliff --latest          # preview notes for the pending release
 ```
 
-To cut a release:
+To cut a release (order matters — the tag must land on the commit that already
+contains the finalized changelog):
 
 1. Bump `version` in `pyproject.toml`.
-2. Regenerate and commit `CHANGELOG.md`.
-3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+2. Regenerate the changelog for the new version and commit it. `--tag` asserts
+   the version so the pending commits are filed under it before the tag exists:
+   `uv run git-cliff --tag vX.Y.Z -o CHANGELOG.md`.
+3. Tag that commit and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
-Pushing a `v*` tag triggers `.github/workflows/release.yml`, which builds the
-release notes and publishes a GitHub Release automatically.
+Cut the tag from `main` after the changelog commit has merged, so the tag stays
+on the mainline. Pushing a `v*` tag triggers `.github/workflows/release.yml`,
+which builds the release notes and publishes a GitHub Release automatically.
