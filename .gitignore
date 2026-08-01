@@ -82,6 +82,9 @@ ipython_config.py
 # .python-version is committed intentionally: it pins the interpreter for uv
 # (used by `uv python install` locally and in CI). Do not ignore it.
 
+# Release notes generated transiently by the release workflow / git-cliff
+RELEASE_NOTES.md
+
 # celery beat schedule file
 celerybeat-schedule
 celerybeat.pid

@@ -8,8 +8,15 @@ For development/testing:
     python setup.py py2app -A
 """
 import os
+import tomllib
 
 from setuptools import setup
+
+# Single source of truth for the version: pyproject.toml. Keeps the app bundle's
+# CFBundleVersion in lockstep with the packaging metadata (Python 3.11+ ships
+# tomllib in the stdlib, which matches requires-python).
+with open('pyproject.toml', 'rb') as _f:
+    VERSION = tomllib.load(_f)['project']['version']
 
 APP = ['main.py']
 DATA_FILES = [
@@ -30,8 +37,8 @@ OPTIONS = {
         'CFBundleName': 'BusyTag Spotify',
         'CFBundleDisplayName': 'BusyTag Spotify Widget',
         'CFBundleIdentifier': 'com.busytag.spotify-widget',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
+        'CFBundleVersion': VERSION,
+        'CFBundleShortVersionString': VERSION,
         'LSBackgroundOnly': False,
         'NSHighResolutionCapable': True,
     },
