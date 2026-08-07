@@ -24,8 +24,97 @@ jobs:
         env:
           OUTPUT: RELEASE_NOTES.md
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --title "$TAG" --notes-file RELEASE_NOTES.md
+        # Idempotent: re-running the same tag updates the notes instead of failing.
+        run: |
+          gh release create "$TAG" --title "$TAG" --notes-file RELEASE_NOTES.md \
+            || gh release edit "$TAG" --title "$TAG" --notes-file RELEASE_NOTES.md
+
+  macos-app:
+    needs: release
+    runs-on: macos-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies (fail if lockfile is stale)
+        run: uv sync --locked
+
+      - name: Build .app with py2app
+        run: uv run python setup.py py2app
+
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PWD="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN"
+          security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PWD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PWD" "$KEYCHAIN" >/dev/null
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | grep 'Developer ID Application' | head -1 | awk -F'"' '{print $2}')"
+          if [ -z "$IDENTITY" ]; then echo "No Developer ID Application identity found" >&2; exit 1; fi
+          echo "SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Codesign (hardened runtime)
+        run: |
+          set -euo pipefail
+          APP="$(ls -d dist/*.app | head -1)"
+          echo "Signing: $APP"
+          # Sign nested Mach-O (Python + C-extension dylibs) inner-to-outer first,
+          # then the bundle itself; --deep re-covers anything missed (frameworks).
+          find "$APP/Contents" \( -name '*.so' -o -name '*.dylib' \) -print0 \
+            | xargs -0 -I {} codesign --force --options runtime --timestamp \
+                --sign "$SIGN_IDENTITY" {}
+          codesign --force --deep --options runtime --timestamp \
+            --entitlements entitlements.plist --sign "$SIGN_IDENTITY" "$APP"
+          codesign --verify --strict --verbose=2 "$APP"
+
+      - name: Notarize and staple
+        env:
+          AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
+          AC_API_ISSUER_ID: ${{ secrets.AC_API_ISSUER_ID }}
+          AC_API_KEY_P8: ${{ secrets.AC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          APP="$(ls -d dist/*.app | head -1)"
+          KEY_PATH="$RUNNER_TEMP/ac_api_key.p8"
+          printf '%s' "$AC_API_KEY_P8" > "$KEY_PATH"
+          NOTARY_ZIP="$RUNNER_TEMP/notarize.zip"
+          ditto -c -k --keepParent "$APP" "$NOTARY_ZIP"
+          xcrun notarytool submit "$NOTARY_ZIP" \
+            --key "$KEY_PATH" --key-id "$AC_API_KEY_ID" --issuer "$AC_API_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "$APP"
+
+      - name: Package and upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APP="$(ls -d dist/*.app | head -1)"
+          OUT="BusyTag-Spotify-${TAG}.zip"
+          ditto -c -k --keepParent "$APP" "$OUT"
+          gh release upload "$TAG" "$OUT" --clobber

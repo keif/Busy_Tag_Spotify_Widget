@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Displays the currently playing Spotify track on a BusyTag device, with LED colors extracted from album art and BPM-synced patterns."
 readme = "readme.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 dependencies = [
     "requests>=2.32.0",
     "Pillow>=11.3.0",
