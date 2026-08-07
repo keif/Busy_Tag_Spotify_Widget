@@ -209,3 +209,46 @@ contains the finalized changelog):
 Cut the tag from `main` after the changelog commit has merged, so the tag stays
 on the mainline. Pushing a `v*` tag triggers `.github/workflows/release.yml`,
 which builds the release notes and publishes a GitHub Release automatically.
+
+### Signing and notarization (macOS)
+
+The same `v*` tag also builds a code-signed, notarized `.app` on a macOS runner
+and attaches it to the release (the `macos-app` job in `release.yml`). This needs
+a one-time setup of five repository secrets under
+**Settings → Secrets and variables → Actions**:
+
+| Secret | How to obtain it |
+|--------|------------------|
+| `MACOS_CERTIFICATE` | In Keychain Access, export your **Developer ID Application** certificate (with its private key) as a `.p12`, then base64-encode it: `base64 -i cert.p12 \| pbcopy`. |
+| `MACOS_CERTIFICATE_PWD` | The password you set when exporting the `.p12`. |
+| `AC_API_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → your key's **Key ID**. |
+| `AC_API_ISSUER_ID` | The **Issuer ID** shown at the top of that same page. |
+| `AC_API_KEY_P8` | The full contents of the downloaded `AuthKey_XXXXXXXX.p8` file (downloadable only once). |
+
+The App Store Connect API key needs at least the **Developer** role for notarization.
+
+On a tag push the job runs: `py2app` build → code-sign every nested Mach-O and the
+bundle under the hardened runtime (`entitlements.plist`) → `notarytool submit --wait`
+→ `stapler staple` → zip and upload as `BusyTag-Spotify-vX.Y.Z.zip`.
+
+**Verify a release end-to-end.** Download the zip from the published release and
+confirm Gatekeeper accepts it on a machine that never built it:
+
+```
+unzip BusyTag-Spotify-vX.Y.Z.zip
+codesign --verify --strict --verbose=2 "BusyTag Spotify.app"
+xcrun stapler validate "BusyTag Spotify.app"
+spctl --assess --type execute --verbose "BusyTag Spotify.app"
+# expected: "accepted" with "source=Notarized Developer ID"
+```
+
+**If notarization fails**, the workflow log prints a submission id. Pull the
+per-file details with:
+
+```
+xcrun notarytool log <submission-id> \
+  --key AuthKey.p8 --key-id "$AC_API_KEY_ID" --issuer "$AC_API_ISSUER_ID"
+```
+
+Most failures are a missing entitlement or an unsigned nested binary — fixable in
+`entitlements.plist` or the signing step of the workflow.
