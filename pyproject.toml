@@ -1,6 +1,6 @@
 [project]
 name = "busytag-spotify-widget"
-version = "1.0.0"
+version = "1.0.1"
 description = "Displays the currently playing Spotify track on a BusyTag device, with LED colors extracted from album art and BPM-synced patterns."
 readme = "readme.md"
 requires-python = ">=3.11"
