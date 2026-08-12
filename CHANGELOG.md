@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.0.1] - 2026-08-10
+
+### Build & CI
+
+- Build, sign, and notarize the macOS .app on release (#3)
+
+### Documentation
+
+- Document macOS release signing, secrets, and e2e verification (#4)
+
 ## [1.0.0] - 2026-08-01
 
 ### Added
@@ -26,6 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Mac OS capability
 - Migrate to uv, add CI + Dependabot (#1)
-- Add changelog + release automation, unify version
+- Add changelog + release automation (#2)
 
 
